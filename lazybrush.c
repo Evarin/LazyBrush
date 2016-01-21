@@ -164,6 +164,10 @@ lazybrush_wrapper(PyObject *self, PyObject *args)
 	p->color = color;
 	disable_node(p);
       }// else printf("%d", p->tree);
+      if(p->tree == 0) { // just debug
+	p->color = 0;
+	disable_node(p);
+      }
     }
     
     // On efface la couleur des résidus

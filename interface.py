@@ -27,6 +27,7 @@ class Window:
         hgt = self.image.height()
         self.colors = Image.new('RGBA',(wdt, hgt))
         self.colors_draw = ImageDraw.Draw(self.colors)
+        self.colors_draw.rectangle([0, 0, wdt-1, hgt-1], outline = (255, 255, 255))
         self.imagesprite = Canvas(root, width=wdt, height=hgt)
         self.imagesprite.create_image((wdt/2,hgt/2), image=self.image)
         self.imagesprite.pack(side=LEFT)
@@ -46,6 +47,10 @@ class Window:
         self.brushsize_label.pack(side=TOP)
         self.brushsizer = Scale(root, from_=2, to=100, orient=HORIZONTAL)
         self.brushsizer.pack(side=TOP)
+        self.lambda_label = Label(text="Lambda size")
+        self.lambda_label.pack(side=TOP)
+        self.lambdabar = Scale(root, from_=0.01, to=1, resolution=0.01, orient=HORIZONTAL)
+        self.lambdabar.pack(side=TOP)
         self.startlb = Button(root, text="LazyBrush", command=self.lazybrush)
         self.startlb.pack(side=TOP)
         
@@ -76,7 +81,7 @@ class Window:
         self.start = event
     
     def lazybrush(self):
-        (img, result) = lazybrush(self.sketch, self.colors, 1.1, 0.05)
+        (img, result) = lazybrush(self.sketch, self.colors, 1.1, self.lambdabar.get())
         print result.shape
         self.output_img = Image.fromarray(result, "RGBA")
         wdt = self.image.width()
