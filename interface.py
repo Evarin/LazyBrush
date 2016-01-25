@@ -22,6 +22,8 @@ class Window:
 
     def processimg(self, img):
         self.sketch = Image.open(img).convert("L")
+        self.fullsketch = self.sketch.convert("RGBA")
+        self.fullsketch_draw = ImageDraw.Draw(self.fullsketch)
         self.image = ImageTk.PhotoImage(self.sketch)
         wdt = self.image.width()
         hgt = self.image.height()
@@ -35,8 +37,6 @@ class Window:
         self.imagesprite.bind('<B1-Motion>',     self.onStart)
         self.resultsprite = Canvas(root, width=wdt, height=hgt)
         self.resultsprite.pack(side=LEFT)
-        #canvas.bind('<Double-1>',      self.onClear)
-        #canvas.bind('<ButtonPress-3>', self.onMove)
     
     def showtools(self):
         self.curcolor_code = "#FFFFFF"
@@ -53,6 +53,14 @@ class Window:
         self.lambdabar.pack(side=TOP)
         self.startlb = Button(root, text="LazyBrush", command=self.lazybrush)
         self.startlb.pack(side=TOP)
+        self.filename = StringVar()
+        self.filefield = Entry(root, textvariable=self.filename)
+        self.filename.set("results/ref.png")
+        self.filefield.pack(side=TOP)
+        self.saveref = Button(root, text="Save sketch", command=self.savesketch)
+        self.saveref.pack(side=TOP)
+        self.saveres = Button(root, text="Save result", command=self.saveresult)
+        self.saveres.pack(side=TOP)
         
     def colorpick(self):
         (self.curcolor, self.curcolor_code) = askcolor(color=self.curcolor_code, title = "Brush color")
@@ -66,6 +74,7 @@ class Window:
         r_c = self.brushsizer.get() - r
         self.imagesprite.create_oval(event.x-r, event.y-r, event.x+r_c, event.y+r_c, fill = self.curcolor_code, outline="")
         self.colors_draw.ellipse((event.x-r, event.y-r, event.x+r_c, event.y+r_c), fill = self.curcolor)
+        self.fullsketch_draw.ellipse((event.x-r, event.y-r, event.x+r_c, event.y+r_c), fill = self.curcolor_code)
 
     def onGrow(self, event):
         canvas = event.widget
@@ -88,9 +97,16 @@ class Window:
         hgt = self.image.height()
         img = Image.fromarray(img, "L")
         print (wdt, hgt)
-        self.result = ImageTk.PhotoImage(ImageChops.multiply(self.output_img, img.convert('RGBA')))
-        self.resultsprite.create_image((wdt/2,hgt/2), image=self.result)
-        
+        self.result = ImageChops.multiply(self.output_img, img.convert('RGBA'))
+        self.resultTk = ImageTk.PhotoImage(self.result)
+        self.resultsprite.create_image((wdt/2,hgt/2), image=self.resultTk)
+
+    def savesketch(self):
+        self.fullsketch.save(self.filename.get(), 'PNG')
+
+    def saveresult(self):
+        self.result.save(self.filename.get(), 'PNG')
+
 root = Tk()
 root.geometry('1200x800')
 root.protocol("WM_DELETE_WINDOW", quit)
