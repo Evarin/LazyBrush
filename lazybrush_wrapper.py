@@ -37,7 +37,7 @@ def lazybrush(sketch, colors, sigma, l):
     print list_colors
     output = colors_i.copy()
     # Core algorithm in c
-    wrapper(sketch_f.T, colors_i, list_colors, 2*(wdt+hgt), l, output)
+    wrapper(sketch_f.T, colors_i, list_colors, 4*(wdt+hgt), l, output)
     output = np.append(output,[0]) # Fix a little bug ?
     output = list_colors[output]
     osketch = (sketch_f*255).reshape(wdt, hgt).astype(np.uint8)

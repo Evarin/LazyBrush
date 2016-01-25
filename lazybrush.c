@@ -97,14 +97,14 @@ lazybrush_wrapper(PyObject *self, PyObject *args)
       if (i < wdt-1) {
 	cq = *((double *)PyArray_GETPTR2(sketch, i+1, j));
 	q = p+1;
-	e = connect_nodes(p, q, K * cp + 1.0f, NULL);
-	connect_nodes(q, p, K * cq + 1.0f, e);
+	e = connect_nodes(p, q, K * (cp + cp)/2.0f + 1.0f, NULL);
+	connect_nodes(q, p, K * (cp+cp)/2.0f + 1.0f, e);
       }
       if (j < hgt-1) {
 	q = p+wdt;
 	cq = *((double *)PyArray_GETPTR2(sketch, i, j+1));
-	e = connect_nodes(p, q, K * cp + 1.0f, NULL);
-	connect_nodes(q, p, K * cq + 1.0f, e);
+	e = connect_nodes(p, q, K * (cp+cp)/2.0f + 1.0f, NULL);
+	connect_nodes(q, p, K * (cp+cp)/2.0f + 1.0f, e);
       }
       npy_intp c = *((npy_intp *)PyArray_GETPTR1(colors, i+j*wdt));
       if(c>0) {
