@@ -34,7 +34,10 @@ npy_intp explore_regions(Node *points, npy_intp length, char *colornames,
       // Si non : on supprime la couleur
       if(!stillalive) {
 	printf("Suppression de cette couleur\n");
-	colornames[color] = colornames[mincol];
+	int ci = mincol;
+	for(; colornames[ci] != color && ci<numcols; ci++){}
+	colornames[ci] = colornames[mincol];
+	colornames[mincol] = color;
 	mincol++;
       }
     }
@@ -72,7 +75,7 @@ lazybrush_wrapper(PyObject *self, PyObject *args)
   Py_DECREF(o_dims);
 
   // Initialisation des structures de graphe
-  printf("Dimensions : %dx%d\n", (int)wdt, (int)hgt);
+  printf("Dimensions : %dx%d, K : %f\n", (int)wdt, (int)hgt, K);
 
   Graph *graph = make_graph();
   Node *points = spawn_nodes(graph, wdt*hgt);
@@ -86,25 +89,29 @@ lazybrush_wrapper(PyObject *self, PyObject *args)
   colornames[0] = 0; // Transparent -> ne doit pas rester à la fin
   for(i=0;i<numcols-1;i++){
     colorsets[i] = NULL;
-    colornames[i+1] = i+1;
+    colornames[i+1] = numcols-i-1;
   }
+  
 
   for(j=0; j<hgt; j++) {
     for(i=0; i<wdt; i++) {
       Node *p = points+i+j*wdt, *q;
       Edge *e;
-      float cp = *((double *)PyArray_GETPTR2(sketch, i, j)), cq;
+      float cp = *((double *)PyArray_GETPTR2(sketch, i, j));
+      if(i==wdt/2) {
+	printf("%f ", cp);
+      }
       if (i < wdt-1) {
-	cq = *((double *)PyArray_GETPTR2(sketch, i+1, j));
+	// cq = *((double *)PyArray_GETPTR2(sketch, i+1, j));
 	q = p+1;
-	e = connect_nodes(p, q, K * (cp + cp)/2.0f + 1.0f, NULL);
-	connect_nodes(q, p, K * (cp+cp)/2.0f + 1.0f, e);
+	e = connect_nodes(p, q, K * cp + 1.0f, NULL);
+	connect_nodes(q, p, K * cp + 1.0f, e);
       }
       if (j < hgt-1) {
 	q = p+wdt;
-	cq = *((double *)PyArray_GETPTR2(sketch, i, j+1));
-	e = connect_nodes(p, q, K * (cp+cp)/2.0f + 1.0f, NULL);
-	connect_nodes(q, p, K * (cp+cp)/2.0f + 1.0f, e);
+	// cq = *((double *)PyArray_GETPTR2(sketch, i, j+1));
+	e = connect_nodes(p, q, K * cp + 1.0f, NULL);
+	connect_nodes(q, p, K * cp + 1.0f, e);
       }
       npy_intp c = *((npy_intp *)PyArray_GETPTR1(colors, i+j*wdt));
       if(c>0) {
@@ -133,24 +140,33 @@ lazybrush_wrapper(PyObject *self, PyObject *args)
 
     if(c >= numcols-1) break;
     // Fabrication du graphe
-    printf("Traitement couleur %d (%d)\n", (int)color, (int)c);
-    // On relie les points de couleur c à S
+    printf("Traitement couleur %d (%d) contre", (int)c, (int)color);
+    // On relie les points de couleur color à S
+    int n = 0;
     for (p = colorsets[color-1]; p != NULL; p = p->_next_in_group) {
       if(p->disabled) continue;
+      n++;
       Edge *e = connect_nodes(s, p, (1.0f-lambda)*K, NULL);
       connect_nodes(p, s, 0.0f, e);
+    }
+    if (n==0) { // Pas de pixel actif de cette couleur
+      printf("Pas de pixel actif\n");
+      c++;
+      continue;
     }
     int d;
     npy_intp acolor;
     // On relie les points de couleur non encore traitée à T
-    for (d = color+1; d<numcols; d++) {
+    for (d = c+1; d<numcols; d++) {
       acolor = colornames[d];
+      printf(" %d", (int)acolor);
       for(p = colorsets[acolor-1]; p != NULL; p = p->_next_in_group) {
 	if(p->disabled) continue;
 	Edge *e = connect_nodes(p, t, (1.0f-lambda)*K, NULL);
 	connect_nodes(t, p, 0.0f, e);
       }
     }
+    printf("\n");
 
     // Mincut
     mincut(graph, s, t);

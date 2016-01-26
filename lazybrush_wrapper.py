@@ -21,13 +21,13 @@ def logkernel(sigma):
         kernel.append(ck)
     return kernel
     
-def lazybrush(sketch, colors, sigma, l):
+def lazybrush(sketch, colors, sigma, l, kscale):
     # LoG filter
     kernel = logkernel(sigma)
-    print kernel
     sketch_f = np.asarray(sketch, dtype=np.double)
     sketch_f = ndimage.convolve(sketch_f, kernel)
     sketch_f = 1 - np.maximum(0, sketch_f / np.max(np.max(sketch_f)))
+    print(np.min(np.min(sketch_f)))
     (wdt, hgt) = sketch_f.shape
     # Drop a dimension
     sketch_f = sketch_f.reshape(wdt, hgt)
@@ -37,9 +37,8 @@ def lazybrush(sketch, colors, sigma, l):
     print list_colors
     output = colors_i.copy()
     # Core algorithm in c
-    wrapper(sketch_f.T, colors_i, list_colors, 4*(wdt+hgt), l, output)
+    wrapper(sketch_f.T, colors_i, list_colors, kscale*2*(wdt+hgt), l, output)
     output = np.append(output,[0]) # Fix a little bug ?
     output = list_colors[output]
     osketch = (sketch_f*255).reshape(wdt, hgt).astype(np.uint8)
-    print osketch
     return (osketch, output.reshape(wdt, hgt))
