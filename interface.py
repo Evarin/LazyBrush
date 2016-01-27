@@ -66,6 +66,11 @@ class Window:
         self.Kbar = Scale(root, from_=0, to=5, resolution=0.1, orient=HORIZONTAL)
         self.Kbar.set(1)
         self.Kbar.pack(side=TOP)
+        # Use LoG or pow2
+        self.uselogsketch = IntVar()
+        self.usetsketch = Checkbutton(root, text="Use LoG (else pow2)", variable=self.uselogsketch)
+        self.usetsketch.pack(side=TOP)
+        self.uselogsketch.set(1)
         # Sigma
         self.sigma_label = Label(text="Sigma value")
         self.sigma_label.pack(side=TOP)
@@ -74,7 +79,7 @@ class Window:
         self.sigmabar.pack(side=TOP)
         # Show LoG-filtered sketch or true sketch
         self.showlogsketch = IntVar()
-        self.showtsketch = Checkbutton(root, text="Show LoG", variable=self.showlogsketch)
+        self.showtsketch = Checkbutton(root, text="Show Filtered", variable=self.showlogsketch)
         self.showtsketch.pack(side=TOP)
         # Start
         self.startlb = Button(root, text="LazyBrush", command=self.lazybrush)
@@ -128,7 +133,7 @@ class Window:
         self.start = event
     
     def lazybrush(self):
-        (img, result) = lazybrush(self.sketch, self.colors, self.sigmabar.get(), self.lambdabar.get(), self.Kbar.get())
+        (img, result) = lazybrush(self.sketch, self.colors, self.sigmabar.get(), self.lambdabar.get(), self.Kbar.get(), self.uselogsketch.get())
         print result.shape
         mode = "RGBA" if self.showlogsketch.get() else "RGB"
         self.output_img = Image.fromarray(result, "RGBA").convert(mode)

@@ -21,12 +21,15 @@ def logkernel(sigma):
         kernel.append(ck)
     return kernel
     
-def lazybrush(sketch, colors, sigma, l, kscale):
-    # LoG filter
-    kernel = logkernel(sigma)
+def lazybrush(sketch, colors, sigma, l, kscale, useLoG):
     sketch_f = np.asarray(sketch, dtype=np.double)
-    sketch_f = ndimage.convolve(sketch_f, kernel)
-    sketch_f = 1 - np.maximum(0, sketch_f / np.max(np.max(sketch_f)))
+    if useLoG:
+        # LoG filter
+        kernel = logkernel(sigma)
+        sketch_f = ndimage.convolve(sketch_f, kernel)
+        sketch_f = 1 - np.maximum(0, sketch_f / np.max(np.max(sketch_f)))
+    else:
+        sketch_f = (sketch_f / np.max(np.max(sketch_f))) ** 2.0
     print(np.min(np.min(sketch_f)))
     (wdt, hgt) = sketch_f.shape
     # Drop a dimension
